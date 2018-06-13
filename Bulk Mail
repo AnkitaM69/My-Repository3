@@ -33,3 +33,48 @@
             MyMsg = null;
         }
     }
+    
+    
+   // Controller
+   
+     [HttpPost]
+        public ActionResult Mail(RegistrationModel model)
+        {
+            if (!string.IsNullOrEmpty(model.RegistrationNo))
+            {
+                MasterDAL ObjMasterDAL = new MasterDAL();
+                string pwd = Convert.ToString(Guid.NewGuid()).Substring(1, 6).ToLower();
+                model.Password = FormsAuthentication.HashPasswordForStoringInConfigFile(pwd, "MD5");  
+                model.SendPassword = pwd;              
+                var details = ObjMasterDAL.StudentPassword(model, 1).ToList();
+                if (details.Count() > 0)
+                {
+                    model.RegistrationNo = details[0].RegistrationNo;
+                    model.EmailID = details[0].EmailID;
+                    model.StudentName = details[0].StudentName;                               
+                    String StuLoginURL = Convert.ToString(ConfigurationManager.AppSettings["StuLoginURL"]);                  
+                    StreamReader reader;
+                    reader = new StreamReader(HostingEnvironment.MapPath(@"~/Content/MailTemplate/StuPassDetails.html"));
+                    string MailBody = reader.ReadToEnd();
+                    MailBody = MailBody.Replace("[Name]", model.StudentName);
+                    MailBody = MailBody.Replace("[RegNo]", model.RegistrationNo);
+                    MailBody = MailBody.Replace("[SendPassword ]", model.SendPassword );
+                    MailBody = MailBody.Replace("[StuLoginUrl]", StuLoginURL);
+                    String DisplayName = Convert.ToString(ConfigurationManager.AppSettings["EmailSenderName"]);
+                    String Subject = "Login details for Registration No " + Convert.ToString(model.RegistrationNo);
+                    BulkMail.sendMail(model.EmailID, DisplayName, Subject, MailBody);                  
+                    DisplayMessage("Sent", "New Password has been sent on your registered mobile no.and Email Id.", "s");
+                    return RedirectToAction("StudentLogin");
+                    
+                }
+                else
+                {
+                    ModelState.AddModelError("RegistrationNo", "Registration No is not Valid. Please Enter correct Registration No!");
+                }
+            }
+            else
+            {
+                ModelState.AddModelError("RegistrationNo", "Please enter Regiatration No.");
+            }
+            return View();
+        }
