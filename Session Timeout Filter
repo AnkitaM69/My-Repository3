@@ -1,0 +1,34 @@
+[AttributeUsageAttribute(AttributeTargets.Class | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
+    public class SessionTimeoutAttribute : ActionFilterAttribute
+    {
+        public override void OnActionExecuting(ActionExecutingContext filterContext)
+        {
+            if (filterContext.ActionDescriptor.GetCustomAttributes(typeof(NoSessionTimeoutAttribute), false).Any())
+            {
+                return;
+            }
+
+            if ((filterContext.HttpContext.Request.UrlReferrer == null || filterContext.HttpContext.Request.Url.Host != filterContext.HttpContext.Request.UrlReferrer.Host)
+                 && !filterContext.HttpContext.Request.Url.AbsolutePath.Contains("Payment"))
+            {
+                filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary(new { controller = "Home", action = "Login", area = "" }));
+            }
+            else
+            {
+                HttpContext ctx = HttpContext.Current;
+                if (String.IsNullOrEmpty(Convert.ToString(HttpContext.Current.Session["UserId"])) &&
+                    String.IsNullOrEmpty(Convert.ToString(HttpContext.Current.Session["UserName"])) &&
+                    String.IsNullOrEmpty(Convert.ToString(HttpContext.Current.Session["UserEmail"])) &&
+                    String.IsNullOrEmpty(Convert.ToString(HttpContext.Current.Session["UserType"])))
+                {
+                    if (filterContext.HttpContext.Request.IsAjaxRequest())
+                    { }
+                    else
+                    {
+                        filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary(new { controller = "Home", action = "Login", area = "" }));
+                    }
+                }
+                base.OnActionExecuting(filterContext);
+            }
+        }
+    }
