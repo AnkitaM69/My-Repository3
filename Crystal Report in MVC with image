@@ -1,0 +1,194 @@
+ [NoSessionTimeoutAttribute]
+        public ActionResult PrintReviewReport(string RId = "",string SessId = "")
+        {
+            objMasterDAL = new MasterDAL();         
+            StudentRegistrationModel StuModel = new StudentRegistrationModel();
+            QualificationSubjects Qmodel = new QualificationSubjects();          
+            Int64 RegID = 0;                     
+            SessionManager.Session = StuModel.Session;
+            model.CollegeCode = SessionManager.CollegeCode;
+            var data = objMasterDAL.GetCollegeDetailsForReport(ColId).ToList();
+            TempData["ReportLogo"] = data[0].ReportLogoPath;       
+            if (RegID > 0)
+            {           
+                StuModel.StudentList = objMasterDAL.GetStudentDetailsWithAcademicQual(RegID);               
+                StuModel.Subjectslist = objMasterDAL.GetStudentSubjectsForReport(RegID);              
+                CommonDAL objCommon = new CommonDAL();
+                DataSet dsData = new DataSet();
+                DataTable StudentDetails = new DataTable();
+                DataTable Subjectslist = new DataTable();
+                DataTable FormOptions = new DataTable();
+                DataTable OtherDocument = new DataTable();
+                StudentDetails = objCommon.Convert_LINQResult_To_DataTable<StudentRegistrationModel>(StuModel.StudentList);
+                StudentDetails.TableName = "dtStudentDetails";
+                Subjectslist = objCommon.Convert_LINQResult_To_DataTable<QualificationSubjects>(StuModel.Subjectslist);
+                Subjectslist.TableName = "dtSubjectslist";            
+                dsData.Tables.Add(StudentDetails);
+                dsData.Tables.Add(Subjectslist);
+               
+
+                if (dsData.Tables[0].Rows.Count > 0)
+                {
+                    dsData.Tables[0].Columns.Add("ServerName", typeof(System.String));
+                    dsData.Tables[0].Columns.Add("SessionYear", typeof(System.String));
+
+                    var DocPath = Convert.ToString(ConfigurationManager.AppSettings["StuLoginURL"] + ConfigurationManager.AppSettings["DocumentPath"]);
+
+                    dsData.Tables[0].Rows[0]["ServerName"] = DocPath;
+                    dsData.Tables[0].Rows[0]["SessionYear"] = Convert.ToString(SessionManager.Session);
+
+                    DataSet dsConverted = convertImage(dsData);
+                    ReportDocument rd = new ReportDocument();
+                    rd.Load(Path.Combine(Server.MapPath("~/Reports/"), "Application.rpt"));
+                    rd.SetDataSource(dsConverted);
+                    Response.Buffer = false;
+                    Response.ClearContent();
+                    Response.ClearHeaders();
+                    try
+                    {
+                        Stream stream = rd.ExportToStream(CrystalDecisions.Shared.ExportFormatType.PortableDocFormat);
+                        rd.Dispose();
+                        stream.Seek(0, SeekOrigin.Begin);
+                        return File(stream, "application/pdf", "Application_Form.pdf");
+                    }
+                    catch (Exception ex)
+                    {
+                        DisplayMessage("Error", "Details not found ! Please contact to College", "w");
+                        if (RId != "")
+                        {
+                            return RedirectToAction("StudentRegistered", "Home");
+                        }
+                        else
+                        {
+                            return RedirectToAction("Downloads");
+                        }
+                    }
+                }
+                else
+                {
+                    DisplayMessage("Error", "Details not found ! Please contact to College", "w");
+                }
+            }
+            else
+            {
+                DisplayMessage("Error", "Details not found ! Please contact to College", "w");
+            }
+            if (RId != "")
+            {
+                return RedirectToAction("StudentRegistered", "Home");
+            }
+            else
+            {
+                return RedirectToAction("Downloads");
+            }
+        }
+
+
+        public DataSet convertImage(DataSet ds)
+        {
+            //  DataTable dt = new DataTable();
+            ds.Tables[0].Columns.Add("StudentImage", typeof(System.Byte[]));
+            ds.Tables[0].Columns.Add("StudentSignImage", typeof(System.Byte[]));
+            ds.Tables[0].Columns.Add("CollegeLogo", typeof(System.Byte[]));                     
+            FileStream picfs;
+            BinaryReader picbr;
+            String imagePath = Server.MapPath("\\Content\\College" + Convert.ToString(ds.Tables[0].Rows[0]["PhotoPath"]));
+            if (System.IO.File.Exists(imagePath))
+            {
+                picfs = new FileStream(imagePath, FileMode.Open);
+                try
+                {
+                    picbr = new BinaryReader(picfs);
+                    byte[] imgbyte = new byte[picfs.Length + 1];
+                    imgbyte = picbr.ReadBytes(Convert.ToInt32((picfs.Length)));
+                    ds.Tables[0].Rows[0]["StudentImage"] = ResizeImageFile(imgbyte, 210);
+                    picfs.Close();
+                    picbr.Close();
+                }
+                catch { picfs.Close(); }
+                finally { picfs.Close(); }
+            }
+
+            ds.Tables[0].AcceptChanges();
+
+            String imageSignPath = Server.MapPath("\\Content\\College" + Convert.ToString(ds.Tables[0].Rows[0]["SignPath"]));
+
+            if (System.IO.File.Exists(imageSignPath))
+            {
+                picfs = new FileStream(imageSignPath, FileMode.Open);
+                try
+                {
+                    picbr = new BinaryReader(picfs);
+                    byte[] imgbyte = new byte[picfs.Length + 1];
+                    imgbyte = picbr.ReadBytes(Convert.ToInt32((picfs.Length)));
+                    ds.Tables[0].Rows[0]["StudentSignImage"] = ResizeImageFile(imgbyte, 210);
+                    picfs.Close();
+                    picbr.Close();
+                }
+                catch { picfs.Close(); }
+                finally { picfs.Close(); }
+            }
+
+            ds.Tables[0].AcceptChanges();
+            String CollegeLogo = Server.MapPath(ConfigurationManager.AppSettings["CollegeLogoPath"].ToString() + Convert.ToString(TempData["ReportLogo"]));
+
+            if (System.IO.File.Exists(CollegeLogo))
+            {
+                picfs = new FileStream(CollegeLogo, FileMode.Open);
+                try
+                {
+                    picbr = new BinaryReader(picfs);
+                    byte[] imgbyte = new byte[picfs.Length + 1];
+                    imgbyte = picbr.ReadBytes(Convert.ToInt32((picfs.Length)));
+                    ds.Tables[0].Rows[0]["CollegeLogo"] = ResizeImageFile(imgbyte, 210);
+                    picfs.Close();
+                    picbr.Close();
+                }
+                catch { picfs.Close(); }
+                finally { picfs.Close(); }
+            }
+
+            ds.Tables[0].AcceptChanges();
+            return ds;
+
+        }
+
+
+        public byte[] ResizeImageFile(byte[] imageFile, int targetSize)
+        {
+            using (Image oldImage = Image.FromStream(new MemoryStream(imageFile)))
+            {
+                Size newSize = CalculateDimensions(oldImage.Size, targetSize);
+
+                using (Bitmap newImage = new Bitmap(newSize.Width, newSize.Height, PixelFormat.Format24bppRgb))
+                {
+                    using (Graphics canvas = Graphics.FromImage(newImage))
+                    {
+                        canvas.SmoothingMode = SmoothingMode.AntiAlias;
+                        canvas.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        canvas.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                        canvas.DrawImage(oldImage, new Rectangle(new Point(0, 0), newSize));
+                        MemoryStream m = new MemoryStream();
+                        newImage.Save(m, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        return m.GetBuffer();
+                    }
+                }
+            }
+        }
+
+
+        public Size CalculateDimensions(Size oldSize, int targetSize)
+        {
+            Size newSize = new Size();
+            if (oldSize.Height > oldSize.Width)
+            {
+                newSize.Width = (int)(oldSize.Width * ((float)targetSize / (float)oldSize.Height));
+                newSize.Height = targetSize;
+            }
+            else
+            {
+                newSize.Width = targetSize;
+                newSize.Height = (int)(oldSize.Height * ((float)targetSize / (float)oldSize.Width));
+            }
+            return newSize;
+        }
