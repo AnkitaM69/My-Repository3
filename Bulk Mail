@@ -1,0 +1,35 @@
+ public static void sendMail(string mailTo, string DisplayName, string mailSub, string mailMsg)
+    {
+        string FromMail = Convert.ToString(ConfigurationManager.AppSettings["FromMail"]);
+        string host = Convert.ToString(ConfigurationManager.AppSettings["ServerIp"]);
+        string uid = Convert.ToString(ConfigurationManager.AppSettings["UserID"]);
+        string pwd = Convert.ToString(ConfigurationManager.AppSettings["Password"]);
+
+        SmtpClient MyMail = new SmtpClient();
+        MailMessage MyMsg = new MailMessage();
+        MyMail.Host = host;
+        MyMsg.Priority = MailPriority.High;
+        MyMsg.To.Add(new MailAddress(mailTo));
+        MyMsg.Subject = mailSub;
+        MyMsg.SubjectEncoding = Encoding.UTF8;
+        MyMsg.IsBodyHtml = true;
+        MyMsg.From = new MailAddress(FromMail, DisplayName);
+        MyMsg.BodyEncoding = Encoding.UTF8;
+        MyMsg.Body = mailMsg;
+        MyMail.UseDefaultCredentials = false;
+        NetworkCredential MyCredentials = new NetworkCredential(uid, pwd);
+        MyMail.Credentials = MyCredentials;
+        try
+        {            
+            CommonDAL objCommonDAL = new CommonDAL();   // Log Email
+            objCommonDAL.LogSentEmail(mailTo, DisplayName, mailSub, mailMsg, FromMail, host, uid, pwd);
+
+            MyMail.Send(MyMsg);
+        }
+        catch { }
+        finally
+        {
+            MyMail = null;
+            MyMsg = null;
+        }
+    }
