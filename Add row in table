@@ -1,0 +1,281 @@
+@model MvcApplication9.Models.Home
+@{
+    ViewBag.Title = "Home Page";
+}
+<div class="container">
+    <form class="form-horizontal">
+
+        <div class="header">
+            <h4>Personal Detail</h4>
+        </div>
+        <hr style="border-top: 2px solid #a7d5e6" />
+
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Name</label>
+                            @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Email :</label>
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Mobile</label>
+                            @Html.TextBoxFor(m => m.Mobile, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Age</label>
+                            @Html.TextBoxFor(m => m.Age, new { @class = "form-control" })
+
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Address</label>
+                            @Html.TextBoxFor(m => m.Address, new { @class = "form-control" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br />
+        <br />
+        <div class="header">
+            <h4>Qualification Detail</h4>
+            <div>
+                <hr style="border-top: 2px solid #a7d5e6" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Qualification</label>
+
+                            @Html.TextBoxFor(m => m.Qualification, new { @class = "form-control" })
+
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Course</label>
+
+                            @Html.TextBoxFor(m => m.Course, new { @class = "form-control" })
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Branch</label>
+
+                            @Html.TextBoxFor(m => m.Branch, new { @class = "form-control" })
+
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Board</label>
+
+                            @Html.TextBoxFor(m => m.BoardUniversity, new { @class = "form-control" })
+
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Passing Year</label>
+
+                            @Html.TextBoxFor(m => m.PassingYear, new { @class = "form-control" })
+
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <label>Percentage</label>
+                            @Html.TextBoxFor(m => m.Percentage, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <input type="button" id="btnadd" value="Add" style="margin-top: 26px; background-color: #74b798 !important;" class="btn btn-primary" />
+                            <input type="button" id="btnUpdate" value="Update" style="margin-top: 26px; background-color: #74b798 !important; display: none" class="btn btn-primary" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br />
+        <br />
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="table-responsive">
+                    <table class="table table-bordered-striped">
+                        <thead class="bg-blue">
+                            <tr>
+                                <th>Qualification</th>
+                                <th>Course</th>
+                                <th>Branch</th>
+                                <th>Board/University</th>
+                                <th>Passing Year</th>
+                                <th>Percentage</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblQualification">
+                            @if (Model != null && Model.IQualificationDetails != null && Model.IQualificationDetails.Count > 0)
+                            {
+                                for (int i = 0; i < Model.IQualificationDetails.Count; i++)
+                                {
+                                <tr class="rows">
+                                    <td><span class="hide">0</span><span class="hide">@Html.DisplayFor(m => m.IQualificationDetails[i].Quid)</span>@Html.DisplayFor(m => m.Qualification)</td>
+                                    <td>@Html.DisplayFor(m => m.IQualificationDetails[i].Course)</td>
+                                    <td>@Html.DisplayFor(m => m.IQualificationDetails[i].Branch)</td>
+                                    <td>@Html.DisplayFor(m => m.IQualificationDetails[i].BoardUniversity)</td>
+                                    <td>@Html.DisplayFor(m => m.IQualificationDetails[i].PassingYear)</td>
+                                    <td>@Html.DisplayFor(m => m.IQualificationDetails[i].Percentage)</td>
+                                    <td>
+                                        <button class="btn btn-xs btn-success" onclick="return EditQualification(this);" value=""><i class="fa fa-pencil-square-o"></i></button>
+
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-xs btn-danger"><i class="fa fa-trash-o"></i></button>
+                                    </td>
+                                </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <input type="submit"  style="margin-top: 26px; background-color: #74b798 !important;" value="submit" class="btn btn-success"/>
+            </div>
+
+        </div>
+
+    </form>
+</div>
+@Scripts.Render("~/bundles/jquery")
+<script src="~/Content/js/PageScript/Index.js"></script>
+<style>
+    .table tbody tr td, .table tbody tr th {
+        border-color: #bebebe!important;
+    }
+
+
+  
+</style>
+
+
+// index.js
+
+$('#btnadd').click(function () {
+    debugger;
+    var QualTable = $("#tblQualification");
+    var isAllowedAdd = true;
+    if (QualTable.children().children().length > 1) {
+        $("#tblQualification tr").each(function () {
+            if ($(this).children()[0].innerText == $('#Qualification').val()) {
+                isAllowAdd = false;
+            }
+        });
+    }
+    if (isAllowedAdd) {
+        var html = '<tr  class="rows">' +
+            '<td>' + '<span class="hide">N</span>' + '<span class="hide">0</span>' + $('#Qualification').val() + '</td>' +
+            '<td>' + $('#Course').val() + '</td>' +
+            '<td>' + $('#Branch').val() + '</td>' +
+            '<td>' + $('#BoardUniversity').val() + '</td>' +
+            '<td>' + $('#PassingYear').val() + '</td>' +
+            '<td>' + $('#Percentage').val() + '</td>' +
+            '<td> <button class="btn btn-xs btn-success" type="button" id="btnEdit" onclick="return EditQualification(this);"><i class="fa fa-pencil-square-o"></i></button></td>' +
+                   '<td><button type="button" onclick="return QualDelete(this);" class="btn btn-xs btn-danger" ><i class="fa fa-trash-o"></i></button></td>' +
+            '</tr>'
+        $(html).appendTo($("#tblQualification"));
+        $('#Qualification').val('');
+        $('#Course').val('');
+        $('#Branch').val('');
+        $('#BoardUniversity').val('');
+        $('#PassingYear').val('');
+        $('#Percentage').val('');
+    }
+    else {
+        alert("Not Allowed", "This qualification detail is already added. If you want to do any correction, Delete it from below table and add again !", "warning");
+    }
+});
+var fieldset;
+function EditQualification(obj) {
+    debugger;
+    $('#btnadd').hide();
+    $('#btnUpdate').show();
+    fieldset = $(obj).parent().parent()[0];
+    $('#Qualification').val($(fieldset).children()[0].innerText);
+    $('#Course').val($(fieldset).children()[1].innerText);
+    $('#Branch').val($(fieldset).children()[2].innerText);
+    $('#BoardUniversity').val($(fieldset).children()[3].innerText);
+    $('#PassingYear').val($(fieldset).children()[4].innerText);
+    $('#Percentage').val($(fieldset).children()[5].innerText);
+}
+$('#btnUpdate').click(function () {
+    debugger;
+    var Qualification = $('#Qualification').val();
+    var Course = $('#Course').val();
+    var Branch = $('#Branch').val();
+    var BoardUniversity = $('#BoardUniversity').val();
+    var PassingYear = $('#PassingYear').val();
+    var Percentage = $('#Percentage').val();
+    $(fieldset).children()[0].innerText = Qualification;
+    $(fieldset).children()[1].innerText = Course;
+    $(fieldset).children()[2].innerText = Branch;
+    $(fieldset).children()[3].innerText = BoardUniversity;
+    $(fieldset).children()[4].innerText = PassingYear;
+    $(fieldset).children()[5].innerText = Percentage;
+    $('#btnadd').show();
+    $('#btnUpdate').hide();
+    $('#Qualification').val('');
+    $('#Course').val('');
+    $('#Branch').val('');
+    $('#BoardUniversity').val('');
+    $('#PassingYear').val('');
+    $('#Percentage').val('');
+});
+
+function QualDelete(Obj) {
+    debugger;
+    $(Obj).parent().parent().remove();
+    var table = $("#tableSelected");
+    if (table.children().children().length > 1) {
+
+        table.show();
+    }
+    else {
+        table.hide();
+    }
+}
+
+
+
+
+
