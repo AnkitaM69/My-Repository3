@@ -1,0 +1,78 @@
+  #region DataTable To List & List to DataTable
+
+        public DataTable Convert_LINQResult_To_DataTable<T>(IEnumerable<T> Linqlist)
+        {
+            DataTable dt = new DataTable();
+
+            PropertyInfo[] columns = null;
+
+            if (Linqlist == null) return dt;
+
+            foreach (T Record in Linqlist)
+            {
+                if (columns == null)
+                {
+                    columns = ((Type)Record.GetType()).GetProperties();
+                    foreach (PropertyInfo GetProperty in columns)
+                    {
+                        Type IcolType = GetProperty.PropertyType;
+
+                        if ((IcolType.IsGenericType) && (IcolType.GetGenericTypeDefinition() == typeof(Nullable<>)))
+                        {
+                            IcolType = IcolType.GetGenericArguments()[0];
+                        }
+
+                        dt.Columns.Add(new DataColumn(GetProperty.Name, IcolType));
+                    }
+                }
+
+                DataRow dr = dt.NewRow();
+
+                foreach (PropertyInfo p in columns)
+                {
+                    dr[p.Name] = p.GetValue(Record, null) == null ? DBNull.Value : p.GetValue
+                    (Record, null);
+                }
+
+                dt.Rows.Add(dr);
+            }
+            return dt;
+        }
+
+        public List<T> Convert_DataTable_To_List<T>(DataTable dt)
+        {
+            List<T> data = new List<T>();
+            foreach (DataRow row in dt.Rows)
+            {
+                T item = GetItem<T>(row);
+                data.Add(item);
+            }
+            return data;
+        }
+
+        private static T GetItem<T>(DataRow dr)
+        {
+            Type temp = typeof(T);
+            T obj = Activator.CreateInstance<T>();
+
+            foreach (DataColumn column in dr.Table.Columns)
+            {
+                foreach (PropertyInfo pro in temp.GetProperties())
+                {
+                    if (pro.Name == column.ColumnName)
+                    {
+                        Type objType = pro.PropertyType;
+
+                        var ColumnData = Convert.ChangeType((String.IsNullOrEmpty(Convert.ToString(dr[column.ColumnName])) ? "0" : dr[column.ColumnName]), pro.PropertyType);
+                        pro.SetValue(obj, ColumnData, null);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
+            return obj;
+        }
+
+        #endregion
