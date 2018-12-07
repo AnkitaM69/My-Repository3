@@ -5,68 +5,749 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
-using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
+using System.Data;
+using System.Configuration;
+using System.Data.SqlClient;
+using BLApplication;
+
 
 namespace WebApplication1
 {
-    public partial class WebForm3 : System.Web.UI.Page
+    public partial class WebForm2 : System.Web.UI.Page
     {
+        BLClass obj = new BLClass();
+        int flag = 0;
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (!IsPostBack)
+            {
+                BindGridview();
+                //ViewState["Record"] = null;
+            }
 
         }
 
-        protected void Button1_Click(object sender, EventArgs e)
+        protected void btnAdd_Click(object sender, EventArgs e)
+        {
+            dvGrid.Visible = true;
+            GetData();
+            Reset();
+        }
+
+        protected void btnSave_Click(object sender, EventArgs e)
+        {
+            if (btnSave.Text == "Update")
+            {
+                obj.Action = "Update";
+                obj.PK_Qualification = hdf_ID.Value;
+            }
+            else
+            {
+                obj.Action = "Insert";
+            }
+            DataTable dt = new DataTable("Personal");
+            DataSet ds1 = new DataSet("PersonalDetails");
+            dt = (DataTable)ViewState["Record"];
+            ds1.Tables.Add(dt);
+            obj.Name = txtName.Text;
+            obj.MobileNo = txtMobile.Text;
+            obj.EmailID = txtEmail.Text;
+            obj.City = txtCity.Text;
+            obj.ds = ds1;
+            DataSet dsResult = new DataSet();
+            dsResult = obj.BulkInsert();
+            if (dsResult != null && dsResult.Tables.Count > 0)
+            {
+                if (dsResult.Tables[1].Rows[0]["MSG"].ToString() == "1")
+                {
+                    lblmessage.Text = "Record Inserted";
+                    Response.Redirect(Request.RawUrl);
+                }
+                else
+                {
+                    lblmessage.Text = "Retry !!";
+                    Response.Redirect(Request.RawUrl);
+                }
+            }
+            else
+            {
+                lblmessage.Text = "RECORD iNSERTED !!";
+                Response.Redirect(Request.RawUrl);
+            }
+
+
+        }
+
+        public void FillData()
+        {
+            if (ddlQualification.SelectedIndex != 0 && PassY2.Text != "" && TxtCourse.Text != "" && Uni2.Text != "" && Per2.Text != "")
+            {
+                DataTable dt = new DataTable("Personal");
+
+                string Qualification = ddlQualification.SelectedItem.Text;
+                string Course = TxtCourse.Text;
+                string PassingYear = PassY2.Text;
+                string UniversityBoard = Uni2.Text;
+                string Percentage = Per2.Text;
+                dt.Columns.Add("Qualification", typeof(string));
+                dt.Columns.Add("Course", typeof(string));
+                dt.Columns.Add("PassingYear", typeof(string));
+                dt.Columns.Add("UniversityBoard", typeof(string));
+                dt.Columns.Add("Percentage", typeof(string));
+                if (ViewState["Record"] != null)
+                {
+                    dt = (DataTable)ViewState["Record"];
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        if (ddlQualification.SelectedItem.Text == dt.Rows[i]["Qualification"].ToString() && ViewState["Record"] != null)
+                        {
+                            flag = 1;
+                            lblmessage.Text = "Already Exist";
+                            break;
+                        }
+                    }
+                }
+                if (flag == 0)
+                {
+
+                    if (ViewState["Record"] == null)
+                    {
+                        dt.Rows.Add(Qualification, Course, PassingYear, UniversityBoard, Percentage);
+                        ViewState["Record"] = dt;
+
+                    }
+
+                    else
+                    {
+                        //dt = (DataTable)ViewState["Record"];
+                        dt.Rows.Add(Qualification, Course, PassingYear, UniversityBoard, Percentage);
+                        ViewState["Record"] = dt;
+
+                    }
+                }
+            }
+            else
+            {
+                lblmessage.Text = "Please fill All the fields!!";
+            }
+
+        }
+
+
+        public void GetData()
+        {
+            FillData();
+            DataTable dt = new DataTable("Personal");
+            dt = (DataTable)ViewState["Record"];
+
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                GridView1.DataSource = dt;
+                GridView1.DataBind();
+            }
+            else
+            {
+                GridView1.DataSource = null;
+                GridView1.DataBind();
+            }
+        }
+
+        public void Reset()
+        {
+            ddlQualification.SelectedIndex = 0;
+            PassY2.Text = "";
+            Uni2.Text = "";
+            Per2.Text = "";
+            TxtCourse.Text = "";
+        }
+
+
+        public void GetData2()
         {
 
-            List<string> selectedValues = new List<string>();        
-            var count = 0;       
-            List<string> intList = new List<string>();
-            if (RadioButtonList1.SelectedItem != null)
+            DataSet ds = new DataSet();
+            ds = obj.BindDataList();
+
+            if (ds != null && ds.Tables.Count > 0)
             {
-                intList.Add(RadioButtonList1.SelectedValue);
+                dlQualificationDetails.DataSource = ds;
+                dlQualificationDetails.DataBind();
             }
-            if (RadioButtonList2.SelectedItem != null)
+            else
             {
-                intList.Add(RadioButtonList2.SelectedValue);
+                dlQualificationDetails.DataSource = null;
+                dlQualificationDetails.DataBind();
             }
-            if (RadioButtonList3.SelectedItem != null)
+        }
+
+
+
+
+
+        public void BindGridview()
+        {
+            obj.Name = string.IsNullOrEmpty(txtSearchBox.Text) ? null : txtSearchBox.Text;
+            obj.Action = "Select";
+            DataSet ds = new DataSet();
+            ds = obj.BindGridview();
+
+            if (ds != null && ds.Tables.Count > 0)
             {
-                intList.Add(RadioButtonList3.SelectedValue);
+                GridView2.DataSource = ds;
+                GridView2.DataBind();
             }
-            if (CheckBoxList1.SelectedItem != null)
+            else
             {
-                intList.Add(CheckBoxList1.SelectedValue);
+                GridView2.DataSource = null;
+                GridView2.DataBind();
             }
-            if (CheckBoxList2.SelectedItem != null)
+        }
+
+        protected void lknDetailView_Click(object sender, EventArgs e)
+        {
+            LinkButton lnk = (LinkButton)sender;
+            TableCell tc = (TableCell)lnk.Parent;
+            GridViewRow gridrow = (GridViewRow)tc.Parent;
+            Label lblPK_PersonId = (Label)gridrow.FindControl("lblPk_PersonId");
+            obj.PK_PersonID = lblPK_PersonId.Text;
+
+            //obj.Action = "SelectQualification";
+            GetData2();
+            dvQualificationDetails.Visible = true;
+
+        }
+
+        protected void btnSearch_Click(object sender, EventArgs e)
+        {
+            BindGridview();
+        }
+
+        protected void lknEdit_Click(object sender, EventArgs e)
+        {
+            //LinkButton lnk = ((LinkButton)sender);
+            //TableCell tc = (TableCell)lnk.Parent;
+
+            DataListItem item = ((LinkButton)sender).NamingContainer as DataListItem;
+
+
+            // DataList gridrow = (DataList)lnk.Parent;
+            Label lblQualification = (Label)item.FindControl("lblQualification");
+            Label lblCourse = (Label)item.FindControl("lblCourse");
+            Label lblPassingYear = (Label)item.FindControl("lblPassingYear");
+            Label lblUniversityBoard = (Label)item.FindControl("lblUniversityBoard");
+            Label lblPer = (Label)item.FindControl("lblPer");
+            Label lblPK_QualificationID = (Label)item.FindControl("lblPK_QualificationID");
+            ddlQualification.SelectedItem.Text = lblQualification.Text;
+            TxtCourse.Text = lblCourse.Text;
+            PassY2.Text = lblPassingYear.Text;
+            Uni2.Text = lblUniversityBoard.Text;
+            Per2.Text = lblPer.Text;
+            hdf_ID.Value = lblPK_QualificationID.Text;
+            btnSave.Text = "Update";
+
+        }
+
+
+    }
+}
+
+
+
+
+/* Business Layer */
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using DLApplication;
+using System.Data;
+
+namespace BLApplication
+{
+    public class BLClass
+    {
+
+        public BLClass()
+        {
+        }
+
+        public DataSet BulkInsert( )
+        {
+            DataSet dsResult= new DataSet();
+            return new DLClass().BulkInsert(Name, MobileNo, EmailID, City, ds,Action,PK_Qualification);
+        }
+
+
+
+        public DataSet BindDataList()
+        {
+
+            return new DLClass().BindDataList (PK_PersonID);
+        }
+
+        public DataSet BindGridview()
+        {
+
+            return new DLClass().BindGridview(Action,Name);
+        }
+
+
+
+        public string Name { get; set; }
+
+        public string MobileNo { get; set; }
+
+        public string EmailID { get; set; }
+
+        public string City { get; set; }
+
+        public DataSet ds { get; set; }
+
+        public string PK_PersonID { get; set; }
+        public string Action { get; set; }
+
+        public string PK_Qualification { get; set; }
+    }
+}
+
+/* data Layer */
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+
+namespace DLApplication
+{
+    public class DLClass
+    {
+
+        public DLClass()
+        {
+        }
+
+        
+
+
+        public DataSet BulkInsert(string Name, string MobileNo, string EmailID, string City, DataSet ds,string Action,string  PK_Qualification)
+        {
+            try
             {
-                intList.Add(CheckBoxList2.SelectedValue);
-            }
-            foreach (string item in intList)
-            {
-                if (count == 0)
+                
+                DataSet dsResult = new DataSet();
+                SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString);
+                
+                SqlCommand cmd = new SqlCommand("WebSaveRecordinXml", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                cmd.Parameters.AddWithValue("@dtQualificationXML", ds.GetXml());
+                cmd.Parameters.AddWithValue("@Name", Name);
+                cmd.Parameters.AddWithValue("@MobileNo", MobileNo);
+                cmd.Parameters.AddWithValue("@EmailId", EmailID);
+                cmd.Parameters.AddWithValue("@City", City);
+                cmd.Parameters.AddWithValue("@Action", Action);
+                cmd.Parameters.AddWithValue("@PK_Qualification", PK_Qualification);
+               cmd.ExecuteNonQuery();
+                con.Close();
+                if (dsResult != null && dsResult.Tables.Count > 0)
                 {
-                    string sub1 = item;
+                    return dsResult;
                 }
-                if (count == 1)
+                else
                 {
-                    string sub2 = item;
+                    return null;
                 }
-                if (count == 2)
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public DataSet BindDataList(string PK_PersonID)
+        {
+            try
+            {
+                SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString);
+
+                SqlCommand cmd = new SqlCommand("WebGetDetails2", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                SqlDataAdapter ad = new SqlDataAdapter(cmd);
+                //cmd.Parameters.AddWithValue("@Action", Action);
+                cmd.Parameters.AddWithValue("@PK_PersonID", PK_PersonID);
+                DataSet dsResult = new DataSet();
+                ad.Fill(dsResult);
+                con.Close();
+                if (dsResult != null && dsResult.Tables.Count > 0)
                 {
-                    string sub3 = item;
+                    return dsResult;
                 }
-                count++;
+                else
+                {
+                    return null;
+                }
             }
-            if (count >3)
+            catch(Exception ex)
             {
-                ScriptManager.RegisterStartupScript(this, typeof(Page), "Alert", "<script>alert('You can select only 3 subjects');</script>", false);
+                throw ex;
             }
-            else if (count <= 2)
+            
+        }
+
+
+        public DataSet BindGridview(string Action, string Name)
+        {
+
+            SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString);
+
+            SqlCommand cmd = new SqlCommand("WebGetDetails", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            con.Open();
+            SqlDataAdapter ad = new SqlDataAdapter(cmd);
+            cmd.Parameters.AddWithValue("@Action", Action);
+            cmd.Parameters.AddWithValue("@Name", Name);
+            DataSet dsResult = new DataSet();
+            ad.Fill(dsResult);
+            con.Close();
+            if (dsResult != null && dsResult.Tables.Count > 0)
             {
-                ScriptManager.RegisterStartupScript(this, typeof(Page), "Alert", "<script>alert('You have to select three subjects');</script>", false);
+                return dsResult;
             }
+            else
+            {
+                return null;
+            }
+
         }
     }
 }
+
+
+/*webapplication.aspx */
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="WebForm2.aspx.cs" Inherits="WebApplication1.WebForm2" %>
+
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1" runat="server">
+    <title></title>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div>
+            <asp:HiddenField ID="hdf_ID" runat="server" />
+            <table>
+                <tr>
+                    <td>
+                        <asp:Label ID="Label1" runat="server">Name :</asp:Label></td>
+                    <td>
+                        <asp:TextBox runat="server" ID="txtName"></asp:TextBox>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <asp:Label ID="Label2" runat="server">MobileNo :</asp:Label></td>
+                    <td>
+                        <asp:TextBox runat="server" ID="txtMobile"></asp:TextBox>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <asp:Label ID="Label3" runat="server">Email ID :</asp:Label></td>
+                    <td>
+                        <asp:TextBox runat="server" ID="txtEmail"></asp:TextBox>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <asp:Label ID="Label4" runat="server">City :</asp:Label>
+                    </td>
+                    <td>
+                        <asp:TextBox runat="server" ID="txtCity"></asp:TextBox>
+                    </td>
+                </tr>
+            </table>
+            <br />
+            <br />
+            <table>
+
+                <tr>
+                    <th>Qualification
+                    </th>
+                    <th>Course Name
+                    </th>
+                    <th>Passing Year
+                    </th>
+                    <th>University/Board
+                    </th>
+                    <th>Percentage
+                    </th>
+                </tr>
+
+                <tr>
+                    <td>
+                        <asp:DropDownList ID="ddlQualification" runat="server">
+                            <asp:ListItem Value="0" Text="Select Qualification"></asp:ListItem>
+                            <asp:ListItem Value="1" Text="Post Graduate"></asp:ListItem>
+                            <asp:ListItem Value="2" Text="Graduate"></asp:ListItem>
+                            <asp:ListItem Value="3" Text="Inter"></asp:ListItem>
+                            <asp:ListItem Value="4" Text="High School"></asp:ListItem>
+                            <asp:ListItem Value="5" Text="Diploma"></asp:ListItem>
+                        </asp:DropDownList>
+                    </td>
+                    <td>
+                        <asp:TextBox runat="server" ID="TxtCourse"></asp:TextBox>
+                    </td>
+                    <td>
+                        <asp:TextBox runat="server" ID="PassY2"></asp:TextBox>
+                    </td>
+
+                    <td>
+                        <asp:TextBox runat="server" ID="Uni2"></asp:TextBox>
+                    </td>
+                    <td>
+                        <asp:TextBox runat="server" ID="Per2"></asp:TextBox>
+                    </td>
+                    <td>
+                        <asp:Button ID="btnAdd" runat="server" OnClick="btnAdd_Click" Text="Add"></asp:Button>
+                    </td>
+                </tr>
+            </table>
+            <br />
+            <br />
+            <div visible="false" id="dvGrid" runat="server">
+
+                <table width="100%">
+
+                    <tr>
+                        <td>
+                            <asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="false" CellPadding="4" ForeColor="#333333" Width="70%" GridLines="None">
+                                <AlternatingRowStyle BackColor="White" ForeColor="#284775"></AlternatingRowStyle>
+                                <Columns>
+                                    <asp:TemplateField HeaderText="Sr No">
+                                        <HeaderStyle HorizontalAlign="Left" />
+                                        <ItemTemplate>
+                                            <%#Container.DataItemIndex+1 %>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Qualification">
+                                        <HeaderStyle HorizontalAlign="Left" />
+                                        <ItemTemplate>
+                                            <asp:Label ID="lblQualification" runat="server" Text='<%#Bind("Qualification")%>' Visible="true"></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Course">
+                                        <HeaderStyle HorizontalAlign="Left" />
+                                        <ItemTemplate>
+                                            <asp:Label ID="lblCourse" runat="server" Text='<%#Bind("Course")%>' Visible="true"></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Passing Year">
+                                        <HeaderStyle HorizontalAlign="Left" />
+                                        <ItemTemplate>
+                                            <asp:Label ID="lblPassingYear" runat="server" Text='<%#Bind("PassingYear")%>' Visible="true"></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="University">
+                                        <HeaderStyle HorizontalAlign="Left" />
+                                        <ItemTemplate>
+                                            <asp:Label ID="lblUniversity" runat="server" Text='<%#Bind("UniversityBoard")%>' Visible="true"></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                    <asp:TemplateField HeaderText="Percentage">
+                                        <HeaderStyle HorizontalAlign="Left" />
+                                        <ItemTemplate>
+                                            <asp:Label ID="lblPercentage" runat="server" Text='<%#Bind("Percentage")%>' Visible="true"></asp:Label>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+                                </Columns>
+                                <EditRowStyle BackColor="#999999"></EditRowStyle>
+
+                                <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White"></FooterStyle>
+
+                                <HeaderStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White"></HeaderStyle>
+
+                                <PagerStyle HorizontalAlign="Center" BackColor="#284775" ForeColor="White"></PagerStyle>
+
+                                <RowStyle BackColor="#F7F6F3" ForeColor="#333333"></RowStyle>
+
+                                <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333"></SelectedRowStyle>
+
+                                <SortedAscendingCellStyle BackColor="#E9E7E2"></SortedAscendingCellStyle>
+
+                                <SortedAscendingHeaderStyle BackColor="#506C8C"></SortedAscendingHeaderStyle>
+
+                                <SortedDescendingCellStyle BackColor="#FFFDF8"></SortedDescendingCellStyle>
+
+                                <SortedDescendingHeaderStyle BackColor="#6F8DAE"></SortedDescendingHeaderStyle>
+                            </asp:GridView>
+                        </td>
+                    </tr>
+
+                </table>
+            </div>
+            <table>
+                <tr>
+                    <td>
+                        <asp:Button ID="btnSave" runat="server" OnClick="btnSave_Click" Text="Save"></asp:Button>
+                    </td>
+                    <td>
+                        <asp:Label runat="server" ID="lblmessage" ForeColor="Red"></asp:Label>
+                    </td>
+                </tr>
+            </table>
+            <br />
+            <br />
+            <div id="Div1" runat="server">
+                <asp:TextBox runat="server" ID="txtSearchBox" placeholder="Search By Name"></asp:TextBox>
+                <asp:Button runat="server" ID="btnSearch" OnClick="btnSearch_Click" Text="Search" />
+                <br />
+                </br>
+        <table width="100%">
+            <tr>
+                <td>
+                    <asp:GridView ID="GridView2" runat="server" AutoGenerateColumns="false" CellPadding="4" ForeColor="#333333" Width="70%" GridLines="None" EmptyDataText="Record Not Found">
+                        <AlternatingRowStyle BackColor="White" ForeColor="#284775"></AlternatingRowStyle>
+                        <Columns>
+                            <asp:TemplateField HeaderText="Sr No">
+                                <HeaderStyle HorizontalAlign="Left" />
+                                <ItemTemplate>
+                                    <%#Container.DataItemIndex+1 %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText="Name">
+                                <HeaderStyle HorizontalAlign="Left" />
+                                <ItemTemplate>
+                                    <asp:Label runat="server" Visible="false" ID="lblPk_PersonId" Text='<%#Bind("PK_PersonId") %>'></asp:Label>
+                                    <asp:Label runat="server" ID="lblName" Text='<%#Bind("Name") %>'></asp:Label>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText="MobileNo">
+                                <HeaderStyle HorizontalAlign="Left" />
+                                <ItemTemplate>
+                                    <asp:Label runat="server" ID="lblMobileNo" Text='<%#Bind("MobileNo") %>'></asp:Label>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText="EmaiId">
+                                <HeaderStyle HorizontalAlign="Left" />
+                                <ItemTemplate>
+                                    <asp:Label runat="server" ID="lblEmail" Text='<%#Bind("EmailId") %>'></asp:Label>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText="City">
+                                <HeaderStyle HorizontalAlign="Left" />
+                                <ItemTemplate>
+                                    <asp:Label runat="server" ID="lblCity" Text='<%#Bind("City") %>'></asp:Label>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText="Action">
+                                <HeaderStyle HorizontalAlign="Left" />
+                                <ItemTemplate>
+                                    <asp:LinkButton ID="lknDetailView" OnClick="lknDetailView_Click" runat="server">View Details</asp:LinkButton>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                        </Columns>
+                        <EditRowStyle BackColor="#999999"></EditRowStyle>
+
+                        <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White"></FooterStyle>
+
+                        <HeaderStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White"></HeaderStyle>
+
+                        <PagerStyle HorizontalAlign="Center" BackColor="#284775" ForeColor="White"></PagerStyle>
+
+                        <RowStyle BackColor="#F7F6F3" ForeColor="#333333"></RowStyle>
+
+                        <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333"></SelectedRowStyle>
+
+                        <SortedAscendingCellStyle BackColor="#E9E7E2"></SortedAscendingCellStyle>
+
+                        <SortedAscendingHeaderStyle BackColor="#506C8C"></SortedAscendingHeaderStyle>
+
+                        <SortedDescendingCellStyle BackColor="#FFFDF8"></SortedDescendingCellStyle>
+
+                        <SortedDescendingHeaderStyle BackColor="#6F8DAE"></SortedDescendingHeaderStyle>
+                    </asp:GridView>
+                </td>
+            </tr>
+        </table>
+            </div>
+            <br />
+            <br />
+            <div runat="server" id="dvQualificationDetails" visible="false">
+                <b>Qualification Details</b>
+                <asp:DataList ID="dlQualificationDetails" runat="server" Width="70%" CellPadding="4" ForeColor="#333333">
+                    <AlternatingItemStyle BackColor="White" />
+                    <FooterStyle BackColor="#1C5E55" Font-Bold="True" ForeColor="White"></FooterStyle>
+
+                    <HeaderStyle BackColor="#1C5E55" Font-Bold="True" ForeColor="White"></HeaderStyle>
+
+                    <ItemStyle BackColor="#E3EAEB"></ItemStyle>
+                    <ItemTemplate>
+                        <table class="table" width="100%">
+
+                            <tr>
+                                <td></td>
+                                <td><b>Qualification</b>
+                                </td>
+                                <td><b>Course</b>
+                                </td>
+                                <td><b>Passing Year</b>
+                                </td>
+                                <td><b>University/Board</b>
+                                </td>
+                                <td><b>Percentage</b>
+                                </td>
+                                <td><b>Action</b>
+                                </td>
+                            </tr>
+                            <tr>
+                               <td>
+                                     <asp:Label runat="server" Visible="false" ID="lblPK_QualificationID" Text='<%#Bind("PK_Qualification") %>'></asp:Label>
+                                </td>
+                                <td>
+                                   
+                                    <asp:Label runat="server" ID="lblQualification" Text='<%#Bind("Qualification") %>'></asp:Label></td>
+                                <td>
+
+                                    <asp:Label runat="server" ID="lblCourse" Text='<%#Bind("Course") %>'></asp:Label></td>
+                                <td>
+
+
+                                    <asp:Label runat="server" ID="lblPassingYear" Text='<%#Bind("PassingYear") %>'></asp:Label></td>
+                                <td>
+
+
+
+                                    <asp:Label runat="server" ID="lblUniversityBoard" Text='<%#Bind("UniversityBoard") %>'></asp:Label>
+                                </td>
+                                <td>
+
+                                    <asp:Label runat="server" ID="lblPer" Text='<%#Bind("Percentage") %>'></asp:Label></td>
+                                
+                                    <td>
+
+                                        <asp:LinkButton ID="lknEdit" OnClick="lknEdit_Click" ValidationGroup='<%#Container.ItemIndex %>' runat="server">Edit</asp:LinkButton>
+                                </td>
+                            </tr>
+                        </table>
+                    </ItemTemplate>
+                    <SelectedItemStyle BackColor="#C5BBAF" Font-Bold="True" ForeColor="#333333"></SelectedItemStyle>
+                </asp:DataList>
+            </div>
+            <br />
+            <br />
+
+
+        </div>
+    </form>
+</body>
+</html>
+
