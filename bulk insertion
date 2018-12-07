@@ -1,0 +1,72 @@
+/* .cs page */
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.HtmlControls;
+using System.Web.UI.WebControls;
+
+namespace WebApplication1
+{
+    public partial class WebForm3 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+
+            List<string> selectedValues = new List<string>();        
+            var count = 0;       
+            List<string> intList = new List<string>();
+            if (RadioButtonList1.SelectedItem != null)
+            {
+                intList.Add(RadioButtonList1.SelectedValue);
+            }
+            if (RadioButtonList2.SelectedItem != null)
+            {
+                intList.Add(RadioButtonList2.SelectedValue);
+            }
+            if (RadioButtonList3.SelectedItem != null)
+            {
+                intList.Add(RadioButtonList3.SelectedValue);
+            }
+            if (CheckBoxList1.SelectedItem != null)
+            {
+                intList.Add(CheckBoxList1.SelectedValue);
+            }
+            if (CheckBoxList2.SelectedItem != null)
+            {
+                intList.Add(CheckBoxList2.SelectedValue);
+            }
+            foreach (string item in intList)
+            {
+                if (count == 0)
+                {
+                    string sub1 = item;
+                }
+                if (count == 1)
+                {
+                    string sub2 = item;
+                }
+                if (count == 2)
+                {
+                    string sub3 = item;
+                }
+                count++;
+            }
+            if (count >3)
+            {
+                ScriptManager.RegisterStartupScript(this, typeof(Page), "Alert", "<script>alert('You can select only 3 subjects');</script>", false);
+            }
+            else if (count <= 2)
+            {
+                ScriptManager.RegisterStartupScript(this, typeof(Page), "Alert", "<script>alert('You have to select three subjects');</script>", false);
+            }
+        }
+    }
+}
