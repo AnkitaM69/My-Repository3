@@ -1,0 +1,165 @@
+$('.numberOnly').bind('keypress', function (e) {
+    debugger;
+    // console.log(e);
+    if ((e.which < 48 || e.which > 57)) {
+        if (e.which == 8 || e.which == 0) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+});
+
+
+$(document).on('focus', ".alphaNumeric", function () {
+    $(this).bind("keypress", function (e) {
+
+        if (e.altKey) {    //e.shiftKey || e.ctrlKey ||
+            e.preventDefault();
+        } else {
+            var key = e.charCode;
+            if (!((key == 8) || (key == 32) || (key == 46) || (key >= 65 && key <= 90) || (key >= 48 && key <= 57) || (key >= 96 && key <= 122))) {
+                e.preventDefault();
+            }
+        }
+    });
+});
+
+function validateEmail(email) {
+    debugger;
+    var filter = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (filter.test(email)) {
+        return true;
+    }
+    else {
+
+        return false;
+    }
+}
+
+$(".alphaOnly").keypress(function (event) {
+    var input = event.charCode;
+    if (!((input > 64 && input < 91) || (input > 96 && input < 123) || (input == 32) || (input == 0)) && input != 46) {
+        event.preventDefault();
+    }
+});
+
+function validateMobile(mobile) {
+    debugger;
+    if (mobile.length != 10) {
+        return false;
+    }
+    else {
+
+        return true;
+    }
+}
+
+function ValidateWebsiteUrl(Url) {
+    debugger;
+    var regex_Web = /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/;
+    if (regex_Web.test(Url)) {
+        return true;
+    }
+    else {
+
+        return false;
+    }
+
+
+}
+
+$('.decimalOnly').bind('keypress', function (e) {
+    if ((e.which < 48 || e.which > 57)) {
+        if (e.which == 8 || e.which == 0 || e.which == 46 && this.value.split('.').length != 2) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+});
+
+
+function validPincode(obj) {
+    if ($(obj).val().length != 6) {
+        $(obj).focus();
+        swal("Invalid !", "Please enter valid pin code.!", "warning");
+        $(obj).val("");
+        return false;
+
+    }
+}
+
+function validateSTD(obj) {
+    if ($(obj).val().length < 3) {
+        $(obj).focus();
+        swal("Invalid !", "Please enter valid STD code.!", "warning");
+        $(obj).val("");
+        return false;
+
+    }
+}
+
+
+function validateLandline(obj) {
+    if ($(obj).val().length < 5) {
+        $(obj).focus();
+        swal("Invalid !", "Please enter valid Landline No.!", "warning");
+        $(obj).val("");
+        return false;
+    }
+}
+
+function validateFax(obj) {
+    if ($(obj).val().length < 7) {
+        $(obj).focus();
+        swal("Invalid !", "Please enter valid Fax No.!", "warning");
+        $(obj).val("");
+        return false;
+    }
+}
+
+
+function validateAadhar(obj) {
+    if ($(obj).val().length < 12) {
+        $(obj).focus();
+        swal("Invalid !", "Please enter valid Aadhar No.!", "warning");
+        $(obj).val("");
+        return false;
+    }
+}
+
+function validatePan(obj) {
+    if ($(obj).val().length < 10) {
+        $(obj).focus();
+        swal("Invalid !", "Please enter valid Pan No.!", "warning");
+        $(obj).val("");
+        return false;
+    }
+}
+
+function validateMobileNumber(obj) {
+    if ($(obj).val().length != 10) {
+        $(obj).focus();
+        swal("Invalid !", "Please enter valid Mobile No.!", "warning");
+        $(obj).val("");
+        return false;
+    }
+}
+
+function validateEmailId(email) {
+    debugger;
+    var filter = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (filter.test($(email).val())) {
+        return true;
+    }
+    else {
+        $(email).focus();
+        swal("Invalid !", "Please enter valid Email Id !", "warning");
+        $(email).val("");
+        return false;
+    }
+}
