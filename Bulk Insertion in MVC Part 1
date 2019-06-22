@@ -1,0 +1,631 @@
+/* controller */
+
+
+              [HttpGet]
+        public ActionResult GroupSubjectMapping()
+        {
+            ObjMasterDAL = new MasterDAL();
+            GroupSujectsMaster obj = new GroupSujectsMaster();
+            obj.AllSubjectLst = ObjMasterDAL.GetGroupSubjects(SessionManager.CollegeCode.ToString(), 0, 0).ToList();
+            return View(obj);
+        }
+        [HttpPost]
+        public ActionResult GroupSubjectMapping(GroupSujectsMaster model)
+        {
+            if (model.GroupName != " " && model.CourseId != 0)
+            {
+
+                ObjMasterDAL = new MasterDAL();
+                model.CollegeCode = SessionManager.CollegeCode;
+
+                XElement XML = new XElement("table");
+                if (model.SubjectList != null && model.SubjectList != "[]")
+                {
+                    List<CollegeCourseMaster> MultiSubList = JsonConvert.DeserializeObject<List<CollegeCourseMaster>>(model.SubjectList);
+                    for (int i = 0; i < MultiSubList.Count; i++)
+                    {
+                        XElement elements = new XElement("SubjectList",
+                            new XElement("GroupNo", Convert.ToInt32(i + 1)),
+                            new XElement("SubjectId1", Convert.ToInt32(MultiSubList[i].MultiSubjectId1)),
+                            new XElement("SubjectId2", Convert.ToInt32(MultiSubList[i].MultiSubjectId2)),
+                            new XElement("SubjectId3", Convert.ToInt32(MultiSubList[i].MultiSubjectId3)));
+                        XML.Add(elements);
+                    }
+                    List<GroupSujectsMaster> details = new List<GroupSujectsMaster>();
+                    if (model.GroupId != 0)
+                    {
+                        details = ObjMasterDAL.UpdateGroupSubjectMaster(XML.ToString(), model);
+                    }
+                    else
+                    {
+                        details = ObjMasterDAL.InsertGroupSubjectMaster(XML.ToString(), model);
+                    }
+                    CollegeCourseMaster obj = new CollegeCourseMaster();
+                    flag = details[0].flag;
+                    if (flag == 1)
+                    {
+                        if (model.GroupId != 0)
+                        {
+                            DisplayMessage("Success", "Record Updated successfully !", "s");
+                        }
+                        else
+                        {
+                            DisplayMessage("Success", "Record submitted successfully !", "s");
+                        }
+                    }
+                    else
+                    {
+                        DisplayMessage("Exists", "Details Already Exists.", "w");
+                    }
+                }
+                else
+                {
+                    DisplayMessage("Please Select Subjects", "", "w");
+                    return RedirectToAction("GroupSubjectMapping");
+                }
+            }
+            else
+            {
+                DisplayMessage("Please fill all the fields !", "", "w");
+
+            }
+            ModelState.Clear();
+            return RedirectToAction("GroupSubjectMapping");
+        }
+        
+          #region Display Message
+        public void DisplayMessage(string message, string midMsg, string messageStatus_s_e_w_i_Or_blank)
+        {
+            string status = messageStatus_s_e_w_i_Or_blank.ToLower();
+            TempData["Message"] = message;
+            TempData["messagemidStatus"] = midMsg;
+            if (status == "s")
+                TempData["messageStatus"] = "success";
+            else if (status == "e")
+                TempData["messageStatus"] = "error";
+            else if (status == "w")
+                TempData["messageStatus"] = "warning";
+            else if (status == "i")
+                TempData["messageStatus"] = "info";
+        }
+        #endregion
+        
+        
+        
+        
+        
+        
+        /* View */
+        
+        <base href='@Url.Content("~/")'>
+@using (Html.BeginForm("GroupSubjectMapping", "Master", FormMethod.Post, new { enctype = "multipart/form-data", @id = "frmGroupSubjectMapping" }))
+{
+    @Html.HiddenFor(m => m.CourseId)
+    @Html.HiddenFor(m => m.GroupName)
+    @Html.HiddenFor(m => m.SubjectList)
+    @Html.HiddenFor(m => m.GroupId)
+    <div class="row">
+        <div class="col-md-12 wrap-heading">
+            <!-- InstanceBeginEditable name="page heading" -->
+            <div class="row">
+                <div class="col-md-9">
+                    Group Subject Mapping
+                </div>
+                <div class="col-md-3">
+                    <div class="text-right required2"><span>Required Field</span></div>
+                </div>
+            </div>
+            <!-- InstanceEndEditable -->
+        </div>
+    </div>
+    <div class="col-md-8 col-md-offset-2 form-wrap">
+        <!-- InstanceBeginEditable name="Content" -->
+        <div class="md-form required">
+            <label class="active">Course</label>
+            @Html.DropDownListFor(m => m.CourseId, new SelectList(string.Empty, "Value", "Text"), "-Select-", new { @id = "ddlCourse", @class = "mdb-select form-control select", @data_live_search = "true" })
+
+        </div>
+
+        <div class="md-form required">
+
+            @Html.TextBoxFor(m => m.GroupName, new { @class = "form-control ", @name = "GroupName", @id = "txtGroupName" })
+            <label for="GroupName" class="">Group Name</label>
+        </div>
+        <div id="divRadio" style="display: none">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="col-md-6">
+                        <div class="col-md-2">
+                            <div class="RadioButton RadioButton-success">
+                                @* @Html.RadioButtonFor(m => m.IsSingle, false, new { @name = "Subject", @value = "false", @id = "Combination" })*@
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Combinations</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="col-md-1">
+                            @*   @Html.RadioButtonFor(m => m.IsSingle, true, new { @name = "Subject", @value = "true", @id = "Single" })*@
+                        </div>
+                        <div class="col-md-5">
+                            <label>Single Subject</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="md-form" style="display: none;" id="divSub">
+            <h4>Subject</h4>
+        </div>
+
+        <div class="row subject md-form" id="divSubject" data-url="@Url.Action("GetSubjectForGroupMapping", "Master")">
+        </div>
+
+        <div style="display: none" id="AddSubject">
+            <div style="text-align: right">
+                <input type="button" value="Add Subjects" id="AddSubjectBtn" class="btn btn-primary" />
+            </div>
+            <div class="table-responsive">
+                <table class="table table-responsive table-stripped">
+                    <tr det="">
+                        <th>S.No.</th>
+                        <th>Subject 1</th>
+                        <th>Subject 2</th>
+                        <th colspan="2">Subject 3</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+
+        <p>&nbsp;</p>
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">
+                <div class="form-group reisterbtn">
+                    @*<a href="#" data-popup-open="popup" class="btn btn-block btn-primary btn-lg">Sumbit<i class="fa fa-arrow-right" aria-hidden="true"></i> </a>*@
+                    <button class="btn  btn-primary" id="btnSubmit"><span id="btnSubmittxt">Submit</span></button>
+                    <input type="button" value="Reset" class="btn  btn-danger" onclick="Reset()" />
+                </div>
+                <div>
+                </div>
+            </div>
+
+        </div>
+        <div>
+            @if (Model.AllSubjectLst != null && Model.AllSubjectLst.Count() > 0)
+            {
+                WebGrid grid = new WebGrid(Model.AllSubjectLst, canPage: false, canSort: false, ajaxUpdateContainerId: "ShortTitleMaster");    
+                <div id="gridContent1">
+                    @MvcHtmlString.Create(grid.GetHtml(
+        htmlAttributes: new { id = "grid" },
+        tableStyle: "table table-bordered example",
+        headerStyle: "bg-pink",
+        fillEmptyRows: false,
+        columns: grid.Columns(
+        grid.Column(header: "Sl.No ", format: item => item.WebGrid.Rows.IndexOf(item) + 1 + Math.Round(Convert.ToDecimal(grid.TotalRowCount / grid.PageCount) / grid.RowsPerPage) * grid.RowsPerPage * grid.PageIndex, canSort: true),
+        grid.Column("CollegeCode", header: "College Code"),
+        grid.Column("CourseName", header: "Course Name "),
+        grid.Column("GroupName", header: "Group Name"),
+        grid.Column("SubjectList", header: "Subjects", format: (item) =>
+                {
+                    string review = item.SubjectList ?? "";
+                    return new HtmlString(review.Replace("$", "<br/>"));
+                }),
+        grid.Column(header: "Edit/Delete", format: @<text>
+                    <button type="button" id="@item.GroupId" data-value="@item.GroupName" name="@item.CourseId" value="Edit" onclick="EditInfo(this)" data-url="@Url.Action("GetSubjectToEdit", "Master")"  class="btn btn-success edit"  ><i class="fa fa-pencil-square-o"></i></button>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <button type="button"  name="@item.GroupId" value="Delete" onclick="DeleteInfo(this)" data-url="@Url.Action("DeleteGroupSubject", "Master")" class="btn delete btn-danger" ><i class="fa fa-trash-o"></i></button>
+                    </text>))).ToString())
+                </div>
+            }
+            else
+            {  <div class="table-responsive">
+                <div style="width: 100%; text-align: center;" id="gridContent">
+                     <div class="card">
+                            <h4 style="text-align: center;">No records found !!!</h4>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+    </div>
+}
+<script src="~/Content/js/jquery-1.10.2.min.js"></script>
+<script src="~/Content/js/sweetalert.min.js"></script>
+<link href="~/Content/css/sweetalert.css" rel="stylesheet" />
+<script src="~/Content/custom_js/Curd.js"></script>
+<script src="~/Content/custom_js/GroupSubjectMapping.js"></script>
+<script type="text/javascript">
+    var message = '@message';
+    var messageStatus = '@messageStatus';
+    var messagemidStatus = '@messagemidStatus';
+    if (message) {
+        sweetAlert(message, messagemidStatus, messageStatus)
+
+    }
+</script>
+
+
+/* GroupSubjectMapping.js */
+
+
+
+$(document).ready(function () {
+
+    GetCourse();
+
+});
+var baseUrl = $('base').attr('href');
+
+function GetCourse() {
+    
+    var Url = baseUrl + 'Master/GetCourseWithSubGroup';
+    var ArrDts = [];
+    ArrDts = GetList(Url, 'GET', 'ddlCourse', ArrDts, 'json');
+    $.each(ArrDts, function (i) {
+        $('#ddlCourse').append("<option  value='" + ArrDts[i].CourseId + "'>" + ArrDts[i].CourseName + "</option>");
+    });
+}
+
+function GetGroup(CourseId) {
+    var ArrDts = [];
+    var model = { CourseId: CourseId };
+    var Url = baseUrl + 'Master/GetCourseGroup';
+    
+    ArrDts = GetList(Url, 'Post', 'ddlGroup', model, 'json');
+    $.each(ArrDts, function (i) {
+        $('#ddlGroup').append("<option  value='" + ArrDts[i].GroupId + "'>" + ArrDts[i].GroupName + "</option>");
+    });
+
+}
+
+
+
+
+$("#ddlCourse").change(function () {
+    
+    if ($("#ddlCourse").val() != "") {
+
+        var CourseId = $('#ddlCourse').val();
+
+        $('#divRadio').attr("style", "display:none");
+        getSubjects(CourseId);
+    }
+    else {
+        $('#divSubject').attr("style", "display:none");
+        $('#AddSubject').attr("style", "display:none");
+    }
+});
+function getSubjects(CourseId) {
+    $('#divLoader').show();
+    var Url = baseUrl + 'Master/GetSubjectForGroupMapping';
+    $.ajax({
+        url: Url,
+        type: 'GET',
+        dataType: 'html',
+        data: { CourseId: CourseId },
+        async: false,
+        success: function (result) {
+            $('#divSubject').html(result);
+            $('#divSub').attr("style", "display:block");
+            $('#divSubject').attr("style", "display:block");
+            $('#AddSubject').attr("style", "display:block");
+            $('#divLoader').hide();
+        },
+        error: function (xhr, status) {
+            $('#divLoader').hide();
+            swal('Some problem occur !', '', 'error');
+        }
+    });
+}
+
+$("input[type='radio']").on("change", function () {
+    var Issingle;
+    var CourseId = $('#CourseId').val();
+    var GroupId = $('#GroupId').val();
+    var Url = baseUrl + 'Master/GetSubject';
+    var flag = $(this).val();
+
+    if (flag == "True") {
+        Issingle = 1;
+    }
+    else if (flag == "False") {
+        Issingle = 0;
+    }
+    if (Issingle == 1 || Issingle == 0) {
+        $('#IsSingle').val(Issingle);
+        $('#divLoader').show();
+        $.ajax({
+            url: Url,
+            type: 'GET',
+            dataType: 'html',
+            data: { CourseId: CourseId, GroupId: GroupId, IsSingle: Issingle },
+            async: false,
+            success: function (result) {
+                $("#divSubject").html(result);
+                $('#divSubject').attr("style", "display:block");
+                $('#divLoader').hide();
+            },
+            error: function (xhr, status) {
+                $('#divLoader').hide();
+                swal('Some problem occur !', '', 'error');
+            }
+        });
+    }
+
+});
+
+$("#btnSubmit").click(function (e) {
+    
+    var isOk = true;
+
+    var count = 1;
+    var SubjectArr = [];
+    if ($('#ddlCourse').val() == '') {
+        $('#ddlCourse').focus();
+        swal("Required !", "Please select Course. ", "warning");
+        return false;
+    }
+
+    
+    if ($('#txtGroupName').val() == '') {
+        $('#txtGroupName').focus();
+        swal("Required !", "Please enter group name. ", "warning");
+        return false;
+    }
+
+
+
+
+    $('table tr[det]').each(function () {
+        var ID1 = "";
+        var ID2 = "";
+        var ID3 = "";
+        var newSub = 0;
+        if (count != 1) {
+
+            $(this).find('td').each(function () {
+
+                //alert($(this).attr("id"));
+
+                if (newSub == 1) {
+                    ID1 = $(this).attr("id");
+                }
+                else if (newSub == 2) {
+                    ID2 = $(this).attr("id");
+                }
+                else if (newSub == 3) {
+                    ID3 = $(this).attr("id");
+                }
+                newSub++;
+            });
+
+            if (newSub == 5) {
+                SubjectArr.push({
+                    MultiSubjectId1: ID1,
+                    MultiSubjectId2: ID2,
+                    MultiSubjectId3: ID3
+                });
+                //alert(JSON.stringify(SubjectArr));
+            }
+        }
+        count++;
+
+    });
+
+
+    if (!isOk) {
+        e.preventDefault(e);
+        return;
+    }
+    
+    var data = JSON.stringify(SubjectArr);
+    if (data != "[]") {
+        $("#SubjectList").val(data);
+        $("#CourseId").val($("#ddlCourse").val());
+        $("#GroupName").val($("#txtGroupName").val());
+    }
+    else {
+
+        swal("Required !", "Please Add Subject ", "warning")
+        isOk = false;
+        return false;
+    }
+    // alert($("#SubjectList").val());
+
+
+    if (!isOk) {
+        e.preventDefault(e);
+        return;
+    }
+
+});
+
+
+function EditInfo(data) {
+    
+    var GroupId = $(data)[0].id;
+    var CourseId = $(data)[0].name;
+    var GroupName = $(data).attr("data-value");
+    var Url = baseUrl + 'Master/GetSubjectToEdit';
+
+    $("#txtGroupName").val(GroupName);
+    $("#txtGroupName").focus();
+    $("#ddlCourse").val(parseFloat(CourseId)).prop("disabled", true);
+    $("#GroupId").val(parseFloat(GroupId));
+    getSubjects(CourseId);
+    $("#btnSubmittxt").html('Update');
+
+    $('#divLoader').show();
+
+    $.ajax({
+        url: Url,
+        type: 'GET',
+        contentType: "application/json; charset=utf-8",
+        dataType: 'json',
+        data: { GroupId: GroupId },
+        success: function (result) {
+
+            var j = 1;
+            var k = 0;
+            $('table tr[det]').each(function () {
+                if (k != 0) {
+                    $(this).remove();
+                }
+                k++;
+            })
+
+            $.each(result, function (i) {
+                //$('#' + result[i].subjectId).click();
+
+                $("table tr[det]:last").after('<tr det=""><td>' + j + '</td><td id="' + result[i].subjectId1 + '">' + result[i].SubjectName1 + '</td><td id="' + result[i].subjectId2 + '">' + result[i].SubjectName2 + '</td><td id="' + result[i].subjectId3 + '">' + result[i].SubjectName3 + '</td><td><button class="btn btn-md btn-danger" style="float:right" title="Click to remove row" onclick="$(this).parent().parent().remove();">X</button></td></tr>');
+                j++;
+            })
+            $('#divLoader').hide();
+        },
+        error: function (xhr, status) {
+            $('#divLoader').hide();
+            swal('Some problem occur !', '', 'error');
+        }
+    });
+}
+function DeleteInfo(data) {
+    
+    var Url = baseUrl + 'Master/DeleteGroupSubject';
+    var GroupId = $(data)[0].name;
+    swal({
+        title: "Are you sure?",
+        text: "You are going to Delete a record !",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: '#DD6B55',
+        confirmButtonText: 'Yes, I am sure!',
+        cancelButtonText: "No, cancel it!",
+        closeOnConfirm: false,
+        closeOnCancel: false
+    },
+    function (isConfirm) {
+
+        if (isConfirm) {
+            $('#divLoader').show();
+            $.ajax({
+                url: Url,
+                type: 'GET',
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                data: { GroupId: GroupId },
+                success: function (result) {
+                    if (result > 0) {
+
+                        swal("Success", "Record deleted successfully !", "success");
+                        $('#divLoader').hide();
+                        setTimeout(function () { window.location.reload() }, 1500);
+                    }
+                },
+                error: function (xhr, status) {
+                    $('#divLoader').hide();
+                    swal('Some problem occur !', '', 'error');
+                }
+            });
+        }
+        else {
+            swal("Canceled !", "", "info")
+        }
+    });
+
+
+
+
+}
+$("#AddSubjectBtn").click(function () {
+    
+    var count = 1;
+    var isOk = true;
+    var td1 = "";
+    var tdID1 = "0";
+    var td2 = "";
+    var tdID2 = "0";
+    var td3 = "";
+    var tdID3 = "";
+    var Compare = "0";
+    var tdID = "";
+    $('#divSubject').find('div[chk]').find('div[chk2]').each(function () {
+        if ($(this).find('input[type=checkbox]').is(':checked')) {
+
+            var SubjectId = $($(this).find('input[type=checkbox]')[0]).val();
+            var SubjectName = $($(this).find('span[name="SbName"]')[0]).text();
+
+            if (SubjectId != undefined && SubjectName != "") {
+                if (count == 1) {
+                    td1 = SubjectName;
+                    tdID1 = SubjectId;
+                }
+                else if (count == 2) {
+                    td2 = SubjectName;
+                    tdID2 = SubjectId;
+                }
+                else if (count == 3) {
+                    td3 = SubjectName;
+                    tdID3 = SubjectId;
+                }
+                else {
+                    swal("Error !", "Maximum 3 Subjects can be added at a time ", "warning")
+                    isOk = false;
+                    return false;
+                }
+                count++;
+            }
+        }
+
+
+    });
+
+    if (count < 4) {
+        swal("Required !", "Minimum 3 Subject is Required", "warning")
+        isOk = false;
+        return false;
+
+    }
+
+    //Commented for allow minimum 3 subject
+    //if (count < 1) {
+    //    swal("Required !", "Minimum 1 Subject is Required", "warning")
+    //    isOk = false;
+    //    return false;
+    //}
+    if (tdID1 == "")
+    { tdID1 = "0" }
+    if (tdID2 == "")
+    { tdID2 = "0" }
+    if (tdID3 == "")
+    { tdID3 = "0" }
+    if (isOk) {
+        $('table tr[det]').each(function () {
+            $(this).find('td').each(function () {
+
+                var tdIDs = $(this).attr("id");
+                if (tdIDs != undefined) {
+                    tdID = tdID + tdIDs;
+                }
+            })
+            Compare = tdID1 + tdID2 + tdID3;
+            if (Compare == tdID) {
+                swal("Not Allowed !", "2 Groups with all same subjects can not be added", "warning")
+                isOk = false;
+                return false;
+            }
+            tdID = "";
+        })
+    }
+    if (isOk) {
+        var rowCount = $('table tr[det]:last').index() + 1;
+        $("table tr[det]:last").after('<tr det=""><td>' + rowCount + '</td><td id="' + tdID1 + '">' + td1 + '</td><td id="' + tdID2 + '">' + td2 + '</td><td id="' + tdID3 + '">' + td3 + '</td><td><button class="btn btn-md btn-danger" style="float:right" title="Click to remove row" onclick="$(this).parent().parent().remove();">X</button></td></tr>');
+        $("input[type=checkbox]").prop("checked", false);
+    }
+});
+
+function Reset() {
+    window.location.reload();
+}
