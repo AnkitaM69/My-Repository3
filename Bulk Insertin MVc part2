@@ -1,0 +1,42 @@
+/* Master.DAL  */
+
+using Dapper;
+using DCAIMS.Models;
+using DCAIMS.RepositoryManager;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+
+namespace DCAIMS.DBRepository
+{
+    public class MasterDAL
+    {
+        private IDbConnection _db = new SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings["CONNECTION"].ConnectionString);
+            public List<GroupSujectsMaster> InsertGroupSubjectMaster(string CourseXML, GroupSujectsMaster model)
+        {
+            DynamicParameters param = new DynamicParameters();
+            param.Add("@CourseXML", string.IsNullOrEmpty(CourseXML) ? "" : CourseXML);
+            param.Add("@CollegeCode", model.CollegeCode);
+            param.Add("@CourseId", model.CourseId);
+            param.Add("@GroupName", model.GroupName);
+            var sqlQuery = "proc_Insert_GroupSubjects @CourseXML ,@CollegeCode ,@CourseId ,@GroupName";
+            var obj = SqlMapper.Query<GroupSujectsMaster>(_db, sqlQuery, param).ToList();
+            return obj;
+        }
+        
+      public List<GroupSujectsMaster> UpdateGroupSubjectMaster(string CourseXML, GroupSujectsMaster model)
+        {
+            DynamicParameters param = new DynamicParameters();
+            param.Add("@CourseXML", string.IsNullOrEmpty(CourseXML) ? "" : CourseXML);
+            param.Add("@CourseId", model.CourseId);
+            param.Add("@GroupName", model.GroupName);
+            param.Add("@GroupId", model.GroupId);
+            var sqlQuery = "proc_Update_GroupSubjects @CourseXML ,@CourseId ,@GroupName, @GroupId";
+            var obj = SqlMapper.Query<GroupSujectsMaster>(_db, sqlQuery, param).ToList();
+            return obj;
+        }
+    }
+}
