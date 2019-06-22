@@ -1,0 +1,83 @@
+   $(document).ready(function () {
+   
+   $("#dllCountry").change(function () {
+
+        var Country = $(this).val();
+        GetState(Country, "dllState", "");
+      });
+        $("#dllState").change(function () {
+        var State = $(this).val();
+        GetDistrict(State, "dllDistrict", "");
+      });
+    
+   }); 
+   
+    var State = $("#State").text(); 
+    var District = $("#District").text();  
+    GetState(Country, "dllState", State); 
+    GetDistrict(State, "dllDistrict", District);
+  
+   
+   function GetState(Country, State, StateId) {
+    debugger;
+    if (Country != "") {
+        var _Url = $("#dllCountry").attr("Url");
+        $('#divLoader').show();
+        $.ajax({
+            //url: "../Student/GetStates",
+            url: _Url,
+            data: { Country: Country },
+            dataType: 'json',
+            success: function (data) {
+                $("#" + State).empty();
+                $("#" + State).append($("<option></option>").val("").text("--Select--"));
+                $.each(data, function (key, value) {
+                    $("#" + State).append($("<option></option>").val(value.stateID).text(value.stateName));
+                    $('#divLoader').hide();
+                });
+                if (StateId != "" && StateId != "0") {
+                    $("#" + State).val(parseFloat(StateId)).click();
+                }
+            },
+            error: function () {
+                $('#divLoader').hide();
+            }
+        });
+    }
+    else {
+        $("#" + State).empty();
+        $("#" + State).append($("<option></option>").val("").text("--Select--"));
+    }
+}
+
+function GetDistrict(State, District, DistrictId) {
+
+    if (State != "") {
+        var _Url = $("#dllState").attr("Url");
+        $('#divLoader').show();
+        $.ajax({
+            //url: "../Student/GetStates",
+            url: _Url,
+            data: { StateId: State },
+            dataType: 'json',
+            success: function (data) {
+                $("#" + District).empty();
+                $("#" + District).append($("<option></option>").val("").text("--Select--"));
+                $.each(data, function (key, value) {
+                    $("#" + District).append($("<option></option>").val(value.DistrictID).text(value.DistrictEnglish));
+                    $('#divLoader').hide();
+                });
+                if (DistrictId != "" && DistrictId != "0") {
+                    $("#" + District).val(parseFloat(DistrictId)).click();
+                }
+            },
+            error: function () {
+                $('#divLoader').hide();
+            }
+        });
+    }
+    else {
+        $("#" + District).empty();
+        $("#" + District).append($("<option></option>").val("").text("--Select--"));
+    }
+}
