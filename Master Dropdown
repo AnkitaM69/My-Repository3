@@ -1,0 +1,107 @@
+ public class Dropdown
+    {
+        public SelectList LoadGender()
+        {
+            return new SelectList(new SelectListItem[]{               
+                new SelectListItem{Text="Male",Value="1"},
+                new SelectListItem{Text="Female",Value="2"},
+                  //new SelectListItem{Text="Transgender",Value="3"},
+            }, "Value", "Text");
+        }
+        public SelectList LoadYesNo()
+        {
+            return new SelectList(new SelectListItem[]{             
+                new SelectListItem{Text="Yes",Value="1"},
+                new SelectListItem{Text="No",Value="2"},
+              
+            }, "Value", "Text");
+        }
+        public SelectList LoadCategory()
+        {
+            return new SelectList(new SelectListItem[]{           
+                new SelectListItem{Text="General",Value="1"},
+                new SelectListItem{Text="OBC",Value="2"},        
+                new SelectListItem{Text="SC",Value="3"},
+                new SelectListItem{Text="ST",Value="4"},
+              
+            }, "Value", "Text");
+        }
+        public SelectList LoadMaritalStatus()
+        {
+            return new SelectList(new SelectListItem[]{               
+                new SelectListItem{Text="Unmarried",Value="1"},
+                new SelectListItem{Text="Married",Value="2"}
+            }, "Value", "Text");
+        }
+
+        public SelectList LoadUrban_Rural()
+        {
+            return new SelectList(new SelectListItem[]{          
+                new SelectListItem{Text="Urban",Value="1"},
+                new SelectListItem{Text="Rural",Value="2"}
+              
+            }, "Value", "Text");
+        }
+        public SelectList LoadDomicile()
+        {
+            return new SelectList(new SelectListItem[]{          
+                new SelectListItem{Text="U.P",Value="1"},
+                new SelectListItem{Text="Other",Value="2"}
+              
+            }, "Value", "Text");
+        }
+        public SelectList LoadNationality()
+        {
+            return new SelectList(new SelectListItem[]{          
+                new SelectListItem{Text="Indian",Value="1"},
+                new SelectListItem{Text="Other",Value="2"}
+              
+            }, "Value", "Text");
+        }
+        public SelectList LoadReligion()
+        {
+            return new SelectList(new SelectListItem[]{          
+                new SelectListItem{Text="HINDUISM",Value="1"},
+                new SelectListItem{Text="ISLAM",Value="2"},
+                new SelectListItem{Text="CHRISTIANITY",Value="3"},
+                new SelectListItem{Text="SIKHISM",Value="4"},
+                new SelectListItem{Text="BUDDHISM",Value="5"},
+                new SelectListItem{Text="JAINISM",Value="6"},
+                new SelectListItem{Text="ZOROASTRIANISM",Value="7"},
+                new SelectListItem{Text="JUDAISM",Value="8"}
+              
+            }, "Value", "Text");
+        }
+        public SelectList LoadBloodGroup()
+        {
+            return new SelectList(new SelectListItem[]{          
+                new SelectListItem{Text="O+",Value="1"},
+                new SelectListItem{Text="O-",Value="2"},
+                new SelectListItem{Text="A+",Value="3"},
+                new SelectListItem{Text="A-",Value="4"},
+                new SelectListItem{Text="B+",Value="5"},
+                new SelectListItem{Text="B-",Value="6"},
+                new SelectListItem{Text="AB+",Value="7"},
+                new SelectListItem{Text="AB-",Value="8"}
+              
+            }, "Value", "Text");
+        }
+        public SelectList LoadCountry()
+        {
+            return new SelectList(new SelectListItem[]{          
+                new SelectListItem{Text="India",Value="1"}
+            }, "Value", "Text");
+        }
+        public SelectList LoadModule()
+        {
+
+            MasterDAL objMcon = new MasterDAL();
+            return new SelectList(objMcon.GetModule(), "ModuleId", "ModuleName");
+
+        }
+    }
+    
+    
+    / * View */
+    
+    @Html.DropDownListFor(x => x.Gender, (new DCAIMS.Models.Dropdown()).LoadGender(), "--Select--", new { @id = "ddlGender", @class = "mdb-select form-control select validate" })
